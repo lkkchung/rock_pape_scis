@@ -1,7 +1,15 @@
 let npScore = 0;
+let npChoice = 0;
+let pChoice = 0;
 let pScore = 0;
-let screenState = 1;
+let screenState = 0;
 let messages = [];
+let reset = true;
+let screenTimer = 0;
+let interval = 0;
+let result = 0;
+let resultMessage = ["YOU WIN!", "YOU LOSE.", "DRAW..."]
+let round = 0
 
 let browserSize = {
   browserWidth: window.innerWidth || document.body.clientWidth,
@@ -11,69 +19,290 @@ let browserSize = {
 
 
 function setup(){
-  createCanvas(browserSize.browserWidth, browserSize.browserHeight);
+  //createCanvas(browserSize.browserWidth, browserSize.browserHeight);
+  createCanvas(800, 800);
+
 }
 
 function draw(){
   background(0);
 
-  if (screenState = 0){
+  if (screenState == 0){
+    if(reset == true){
+      screenTimer = 140;
+      reset = false;
+    }
     introScreen();
   }
 
-  for (let i = 0; i <= messages.length; i++){
-    messages[i].displayed();
-
-    if(messages[i].d <= 0){
-      instKiller(messages, i);
-      i--;
+  if (screenState == 1){
+    if(reset == true){
+      screenTimer = 300;
+      reset = false;
     }
+    instructScreen();
   }
 
+  if (screenState == 2){
+    if(reset == true){
+      screenTimer = max([140 - (round * 4), 40]);
+      reset = false;   
+      interval = screenTimer / 4;
+    }
+    countdownScreen(interval);
+    
+    npChoose();
+    pChoose();
+  }
+
+  if (screenState == 3){
+    if(reset == true){
+      screenTimer = max([140 - (round * 4), 40]);
+      reset = false;
+      interval = screenTimer / 4;
+
+      if(npChoice == pChoice){
+        result = 2;
+      } else if (pChoice == 0){
+        result = 1;
+      } else {
+        if (npChoice == 1){
+          if(pChoice == 2){
+            result = 0;
+          }
+          if(pChoice == 3){
+            result = 1;
+          }
+        }
+        if (npChoice == 2){
+          if(pChoice == 3){
+            result = 0;
+          }
+          if(pChoice == 1){
+            result = 1;
+          }
+        }
+        if (npChoice == 3){
+          if(pChoice == 1){
+            result = 0;
+          }
+          if(pChoice == 2){
+            result = 1;
+          }
+        }
+      }
+    }
+    throwScreen(interval);
+  }
+
+  if (screenState == 4){
+    if(reset == true){
+
+    }
+
+    summaryScreen();
+  }
+  
+  if (screenState >= 2){
+    textAlign(CENTER);
+    textSize(50);
+    fill(255);
+    rectMode(CENTER);
+    rect(width / 2, 80, 200, 120);
+    fill(0);
+    text("ROUND", width / 2, 70);
+    text(round, width / 2, 130);
+  }
 }
 
 function introScreen(){
-  messages.push(new message("WELCOME", 10000, 500, 1))
-  messages.push(new message("ROCK, PAPER, SCISSORS", 10000, 11500, 1))
-}
+  push();
+  translate(width / 2, 200);
+  textAlign(CENTER);
+  textSize(20);
+  fill(255);
+  text("Welcome to", 0, 0);
+  textSize(60);
+  textStyle(BOLD);
+  text("Rock, Paper, Scissors", 0, 65);
+  textSize(20);
+  fill(255, 0, 0);
+  textStyle(ITALIC);
+  text("Machine Learning Edition", 0, 110);
+  pop();
 
-function textFormat(_tStyle){
-  if (_tStyle == 0){
-    return {x: height / 2, y: width / 2, s: 100}
+  // screenTimer -= 1;
+
+  if (screenTimer <= 0){
+    screenState += 1;
+    reset = true;
   }
 }
 
-function instKiller(_a, _i){
-  _a.splice(_i, 1);
+function instructScreen(){
+  push();
+  translate(width / 2, 200);
+  textAlign(CENTER);
+  textSize(20);
+  fill(255);
+  text("How to play:", 0, 0);
+  textSize(12);
+  text("Each player simultaneously plays an item, either rock, paper, or scissors.", 0, 30);
+  text("Rock(1) beats scissors.", 0, 50);
+  text("Scissors(2) beats paper.", 0, 70);
+  text("Paper(3) beats rock.", 0, 90);
+  if (screenTimer <= 120){
+    textSize(60);
+    text("READY?!", 0, 160);
+    screenTimer += 1;
+  }
+  pop();
+
+  screenTimer -= 1;
+
+  if (screenTimer <= 0){
+    screenState += 1;
+    reset = true;
+  }
 }
 
-class message{
-  constructor(_text, _duration, _waitTime, _style){
-    this.t = _text;
-    //
-    this.style = textFormat(_style);
-    this.d = _duration;
-    this.wt = _waitTime;
+function countdownScreen(_i){
+  push();
+  translate(width / 2, height / 2);
+  textSize(100);
+  textAlign(CENTER);
+  fill(255, 0 ,0);
+  if(screenTimer > _i * 3){
+    text("3", 0, 0);
+  } else if(screenTimer > _i * 2){
+    text("2", 0, 0);
+  } else if(screenTimer > _i){
+    text("1", 0, 0);
+  } else {
+    text("THROW!", 0, 0);
   }
+  pop();
 
-  displayed() {
-    if (this.wt >= 0){
-      this.wt -=1;
+  screenTimer -= 1;
+
+  if (screenTimer <= 0){
+    screenState += 1;
+    reset = true;
+  }
+}
+
+function throwScreen(){
+  let rps = ["X", "ROCK", "PAPER", "SCISSORS"];
+
+  stroke(255);
+  strokeWeight(2);
+  line(width / 2, 200, width / 2, height - 300);
+  noStroke();
+
+  fill(255);
+  textSize(20);
+  textAlign(CENTER);
+  text("Computer", width / 4, 40);
+  text("Player", width * 3 / 4, 40);
+  textSize(30);
+  text(npScore, width / 4, 90);
+  text(pScore, width * 3 / 4, 90);
+
+  textSize(50);
+  fill(255, 255, 0);
+  text(rps[npChoice], width / 4, height / 2);
+  text(rps[pChoice], width * 3 / 4, height / 2);
+
+  if (screenTimer <= 100){
+    rectMode(CENTER);
+    fill(80);
+    if (result == 0){
+      fill(0, 255, 0);
     }
-    else {
-      push();
-      fill(255);
-      translate (this.style.x, this.style.y - this.style.s / 2);
-      textSize(this.style.s);
+    if (result == 1){
+      fill(255, 0, 0);
+    }
+    rect(width / 2, height - 180, 600, 125)
+    textSize(100);
+    fill(255);
+    text(resultMessage[result], width / 2, height - 150);
+  }
+
+  screenTimer -= 1;
+
+  if (screenTimer <= 0){
+    screenState = 2;
+    reset = true;
+
+    npChoice = 0;
+    pChoice = 0;
+
+    round += 1;
+
+    if (result == 0){
+      pScore += 1;
+    }
+    if (result == 1){
+      npScore += 1;
+    }
+
+    if (round > 100){
+      screenState = 4;
+      round = 100;
+    }
+  }
+}
+
+function summaryScreen(){
+  textMode(CENTER);
+  textSize(20);
+  text()
+}
+
+function npChoose(){
+  npChoice = random([1,2,3]);
+}
+
+function pChoose(){
+  pChoice = random([2,3,1]);
+}
+
+function keyPressed() {
+  if (keyCode == 32 && screenState < 2) {
+    screenTimer = 0;
+  }
+}
+
+
+
+
+
+// class message{
+//   constructor(_text, _duration, _waitTime){
+//     this.t = _text;
+//     this.d = _duration;
+//     this.wt = _waitTime;
+//   }
+
+//   displayed() {
+//     if (this.wt >= 0){
+//       this.wt -=1;
+//     }
+//     else {
+//       push();
+//       fill(255);
+//       translate (this.style.x, this.style.y);
+//       textSize(this.style.s);
       
-      textAlign(CENTER);
-      text(this.t, 0, 0);
-      pop();
+//       textAlign(CENTER);
+//       text(this.t, 0, 0);
+//       console.log(this.t);
+//       pop();
 
-      this.d -=1;
-    }
-  }
-}
+//       this.d -=1;
+//     }
+//   }
+// }
 
 
 // let brain;
