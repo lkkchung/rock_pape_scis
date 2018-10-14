@@ -1,6 +1,8 @@
-let npScore = 0;
+let npChoosing = 0;
 let npChoice = 0;
+let pChoosing = 0; //this allows the player to make a new selection while seeing the old one on screen
 let pChoice = 0;
+let npScore = 0;
 let pScore = 0;
 let screenState = 0;
 let messages = [];
@@ -8,85 +10,94 @@ let reset = true;
 let screenTimer = 0;
 let interval = 0;
 let result = 0;
-let resultMessage = ["YOU WIN!", "YOU LOSE.", "DRAW..."]
-let round = 0
+let resultMessage = ["YOU WIN!", "YOU LOSE.", "DRAW..."];
+let round = 75;
+
+let brain;
+let trainingRounds = 20;
+let history = [];
 
 let browserSize = {
   browserWidth: window.innerWidth || document.body.clientWidth,
   browserHeight: window.innerHeight || document.body.clientHeight
 }
 
-
-
-function setup(){
-  //createCanvas(browserSize.browserWidth, browserSize.browserHeight);
-  createCanvas(800, 800);
+function setup() {
+  createCanvas(browserSize.browserWidth, browserSize.browserHeight);
+  // createCanvas(800, 800);
+  brain = new NeuralNetwork(8, 6, 3);
 
 }
 
-function draw(){
+function draw() {
   background(0);
 
-  if (screenState == 0){
-    if(reset == true){
+  if (screenState == 0) {
+    if (reset == true) {
       screenTimer = 140;
       reset = false;
     }
     introScreen();
   }
 
-  if (screenState == 1){
-    if(reset == true){
+  if (screenState == 1) {
+    if (reset == true) {
       screenTimer = 300;
       reset = false;
     }
     instructScreen();
   }
 
-  if (screenState == 2){
-    if(reset == true){
-      screenTimer = max([140 - (round * 4), 40]);
-      reset = false;   
-      interval = screenTimer / 4;
-    }
-    countdownScreen(interval);
-    
-    npChoose();
-    pChoose();
-  }
-
-  if (screenState == 3){
-    if(reset == true){
+  if (screenState == 2) {
+    if (reset == true) {
       screenTimer = max([140 - (round * 4), 40]);
       reset = false;
       interval = screenTimer / 4;
+      npChoose();
+    }
+    countdownScreen(interval);
 
-      if(npChoice == pChoice){
+    
+    // pChoose();
+  }
+
+  if (screenState == 3) {
+    if (reset == true) {
+      screenTimer = max([160 - (round * 4), 40]);
+      reset = false;
+      interval = screenTimer / 4;
+
+      npChoice = npChoosing;
+      npChoosing = 0;
+      pChoice = pChoosing;
+      pChoosing = 0;
+
+      if (npChoice == pChoice) {
         result = 2;
-      } else if (pChoice == 0){
+      } else if (pChoice == 0) {
         result = 1;
       } else {
-        if (npChoice == 1){
-          if(pChoice == 2){
+        if (npChoice == 1) {
+          if (pChoice == 2) {
             result = 0;
           }
-          if(pChoice == 3){
+          if (pChoice == 3) {
             result = 1;
           }
         }
-        if (npChoice == 2){
-          if(pChoice == 3){
+        if (npChoice == 2) {
+          if (pChoice == 3) {
             result = 0;
           }
-          if(pChoice == 1){
+          if (pChoice == 1) {
             result = 1;
           }
         }
-        if (npChoice == 3){
-          if(pChoice == 1){
+        if (npChoice == 3) {
+          if (pChoice == 1) {
             result = 0;
           }
-          if(pChoice == 2){
+          if (pChoice == 2) {
             result = 1;
           }
         }
@@ -95,15 +106,15 @@ function draw(){
     throwScreen(interval);
   }
 
-  if (screenState == 4){
-    if(reset == true){
+  if (screenState == 4) {
+    if (reset == true) {
 
     }
 
     summaryScreen();
   }
-  
-  if (screenState >= 2){
+
+  if (screenState >= 2) {
     textAlign(CENTER);
     textSize(50);
     fill(255);
@@ -112,12 +123,21 @@ function draw(){
     fill(0);
     text("ROUND", width / 2, 70);
     text(round, width / 2, 130);
+
+    fill(255);
+    textSize(20);
+    textAlign(CENTER);
+    text("Computer", width / 4, 40);
+    text("Player", width * 3 / 4, 40);
+    textSize(30);
+    text(npScore, width / 4, 90);
+    text(pScore, width * 3 / 4, 90);
   }
 }
 
-function introScreen(){
+function introScreen() {
   push();
-  translate(width / 2, 200);
+  translate(width / 2, 300);
   textAlign(CENTER);
   textSize(20);
   fill(255);
@@ -133,50 +153,57 @@ function introScreen(){
 
   // screenTimer -= 1;
 
-  if (screenTimer <= 0){
+  if (screenTimer <= 0) {
     screenState += 1;
     reset = true;
   }
 }
 
-function instructScreen(){
+function instructScreen() {
   push();
-  translate(width / 2, 200);
+  translate(width / 2, 300);
   textAlign(CENTER);
-  textSize(20);
+  textSize(60);
+  textStyle(BOLD);
   fill(255);
   text("How to play:", 0, 0);
-  textSize(12);
-  text("Each player simultaneously plays an item, either rock, paper, or scissors.", 0, 30);
-  text("Rock(1) beats scissors.", 0, 50);
-  text("Scissors(2) beats paper.", 0, 70);
-  text("Paper(3) beats rock.", 0, 90);
-  if (screenTimer <= 120){
+  textSize(20);
+  textStyle(NORMAL);
+  text("Each player simultaneously plays an item, either rock, paper, or scissors.", 0, 40);
+  text("Rock(1) beats scissors.", 0, 70);
+  text("Scissors(2) beats paper.", 0, 100);
+  text("Paper(3) beats rock.", 0, 130);
+  pop();
+
+  if (screenTimer <= 120) {
     textSize(60);
-    text("READY?!", 0, 160);
+    textAlign(CENTER);
+    textStyle(BOLD);
+    fill(255, 0, 0);
+    text("READY?!", width / 2, height / 2);
     screenTimer += 1;
   }
-  pop();
 
   screenTimer -= 1;
 
-  if (screenTimer <= 0){
+  if (screenTimer <= 0) {
     screenState += 1;
     reset = true;
   }
 }
 
-function countdownScreen(_i){
+function countdownScreen(_i) {
   push();
   translate(width / 2, height / 2);
   textSize(100);
+  textStyle(BOLD)
   textAlign(CENTER);
-  fill(255, 0 ,0);
-  if(screenTimer > _i * 3){
+  fill(255, 0, 0);
+  if (screenTimer > 120) {
     text("3", 0, 0);
-  } else if(screenTimer > _i * 2){
+  } else if (screenTimer > 80) {
     text("2", 0, 0);
-  } else if(screenTimer > _i){
+  } else if (screenTimer > 40) {
     text("1", 0, 0);
   } else {
     text("THROW!", 0, 0);
@@ -185,13 +212,13 @@ function countdownScreen(_i){
 
   screenTimer -= 1;
 
-  if (screenTimer <= 0){
+  if (screenTimer <= 0) {
     screenState += 1;
     reset = true;
   }
 }
 
-function throwScreen(){
+function throwScreen() {
   let rps = ["X", "ROCK", "PAPER", "SCISSORS"];
 
   stroke(255);
@@ -199,27 +226,19 @@ function throwScreen(){
   line(width / 2, 200, width / 2, height - 300);
   noStroke();
 
-  fill(255);
-  textSize(20);
-  textAlign(CENTER);
-  text("Computer", width / 4, 40);
-  text("Player", width * 3 / 4, 40);
-  textSize(30);
-  text(npScore, width / 4, 90);
-  text(pScore, width * 3 / 4, 90);
-
   textSize(50);
+  textStyle(NORMAL);
   fill(255, 255, 0);
   text(rps[npChoice], width / 4, height / 2);
   text(rps[pChoice], width * 3 / 4, height / 2);
 
-  if (screenTimer <= 100){
+  if (screenTimer <= 100) {
     rectMode(CENTER);
     fill(80);
-    if (result == 0){
+    if (result == 0) {
       fill(0, 255, 0);
     }
-    if (result == 1){
+    if (result == 1) {
       fill(255, 0, 0);
     }
     rect(width / 2, height - 180, 600, 125)
@@ -230,82 +249,120 @@ function throwScreen(){
 
   screenTimer -= 1;
 
-  if (screenTimer <= 0){
+  if (screenTimer <= 0) {
     screenState = 2;
     reset = true;
 
+    training();
+
     npChoice = 0;
-    pChoice = 0;
 
     round += 1;
 
-    if (result == 0){
+    if (result == 0) {
       pScore += 1;
     }
-    if (result == 1){
+    if (result == 1) {
       npScore += 1;
     }
 
-    if (round > 100){
+    if (round > 100) {
       screenState = 4;
       round = 100;
     }
   }
 }
 
-function summaryScreen(){
-  textMode(CENTER);
+function summaryScreen() {
+  textAlign(CENTER);
   textSize(20);
-  text()
+  fill(255);
+  text("The computer won " + Math.round(npScore / (npScore + pScore) * 100) + "%", width / 2, 200);
+  text("You won " + Math.round(pScore / (npScore + pScore) * 100) + "%", width / 2, 230);
+
+  textSize(50);
+  if (npScore > pScore) {
+    text("You lose!", width / 2, height / 2);
+  }
+  if (npScore == pScore) {
+    text("You tied with the computer.", width / 2, height / 2);
+  }
+  if (npScore < pScore) {
+    text("You win!", width / 2, height / 2);
+  }
 }
 
-function npChoose(){
-  npChoice = random([1,2,3]);
+function npChoose() {
+  // if (round < 30) {
+    npChoosing = random([1, 2, 3]);
+  // }
+
+  if (npChoosing == 1) {
+    history.push(1);
+    history.push(0);
+    history.push(0);
+  }
+  if (npChoosing == 2) {
+    history.push(0);
+    history.push(1);
+    history.push(0);
+  }
+  if (npChoosing == 3) {
+    history.push(0);
+    history.push(0);
+    history.push(1);
+  }
+
+  if (history.length > 30){
+    history.splice(0,3);
+  }
 }
 
-function pChoose(){
-  pChoice = random([2,3,1]);
+function pChoose() {
+  pChoice = random([2, 3, 1]);
 }
 
 function keyPressed() {
   if (keyCode == 32 && screenState < 2) {
     screenTimer = 0;
   }
+
+  if (screenState >= 2) {
+    if (keyCode == 49) {
+      pChoosing = 1;
+    }
+    if (keyCode == 50) {
+      pChoosing = 2;
+    }
+    if (keyCode == 51) {
+      pChoosing = 3;
+    }
+  }
+}
+
+function training() {
+  let targets;
+
+  if (pChoice == 1){
+    targets = [1,0,0];
+  }
+  if (pChoice == 2){
+    targets = [0,1,0];
+  }
+  if (pChoice == 3){
+    targets = [0,0,1];
+  }
+    
+  let inputs = history;
+
+  brain.train(inputs, targets);
 }
 
 
 
 
 
-// class message{
-//   constructor(_text, _duration, _waitTime){
-//     this.t = _text;
-//     this.d = _duration;
-//     this.wt = _waitTime;
-//   }
 
-//   displayed() {
-//     if (this.wt >= 0){
-//       this.wt -=1;
-//     }
-//     else {
-//       push();
-//       fill(255);
-//       translate (this.style.x, this.style.y);
-//       textSize(this.style.s);
-      
-//       textAlign(CENTER);
-//       text(this.t, 0, 0);
-//       console.log(this.t);
-//       pop();
-
-//       this.d -=1;
-//     }
-//   }
-// }
-
-
-// let brain;
 
 // let bases = ["kaiser roll", "brioche bun", "wonder bread", "cookie",
 //   "focaccia", "hero", "whole wheat bread"
