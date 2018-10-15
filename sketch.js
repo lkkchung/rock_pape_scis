@@ -11,21 +11,23 @@ let screenTimer = 0;
 let interval = 0;
 let result = 0;
 let resultMessage = ["YOU WIN!", "YOU LOSE.", "DRAW..."];
-let round = 75;
+let round = 0;
+let confidence = 0;
 
 let brain;
 let trainingRounds = 20;
 let history = [];
+let hLength = 1 * 3;
 
-let browserSize = {
-  browserWidth: window.innerWidth || document.body.clientWidth,
-  browserHeight: window.innerHeight || document.body.clientHeight
-}
+// let browserSize = {
+//   browserWidth: window.innerWidth || document.body.clientWidth,
+//   browserHeight: window.innerHeight || document.body.clientHeight
+// }
 
 function setup() {
-  createCanvas(browserSize.browserWidth, browserSize.browserHeight);
-  // createCanvas(800, 800);
-  brain = new NeuralNetwork(8, 6, 3);
+  // createCanvas(browserSize.browserWidth, browserSize.browserHeight);
+  createCanvas(800, 800);
+  brain = new NeuralNetwork(hLength, 60, 3);
 
 }
 
@@ -232,6 +234,11 @@ function throwScreen() {
   text(rps[npChoice], width / 4, height / 2);
   text(rps[pChoice], width * 3 / 4, height / 2);
 
+  if(confidence > 0){
+    textSize(20);
+    text(Math.round(confidence * 100) + "% confident", width / 4, height / 2 + 80);
+  }
+
   if (screenTimer <= 100) {
     rectMode(CENTER);
     fill(80);
@@ -252,8 +259,10 @@ function throwScreen() {
   if (screenTimer <= 0) {
     screenState = 2;
     reset = true;
-
-    training();
+    
+    if (round >= 10){
+      training();
+    }
 
     npChoice = 0;
 
@@ -293,9 +302,15 @@ function summaryScreen() {
 }
 
 function npChoose() {
-  // if (round < 30) {
+  if (round < hLength / 3) {
     npChoosing = random([1, 2, 3]);
-  // }
+  } else {
+    let predicted = brain.predict(history);
+    console.log(predicted);
+    confidence = Math.max(...predicted);
+    npChoosing = (predicted.indexOf(confidence) + 4) % 3 + 1;
+    console.log(npChoosing);
+  }
 
   if (npChoosing == 1) {
     history.push(1);
@@ -343,7 +358,8 @@ function keyPressed() {
 function training() {
   let targets;
 
-  if (pChoice == 1){
+  //if the player misses a throw, any response will be fine
+  if (pChoice == 0 || pChoice == 1){
     targets = [1,0,0];
   }
   if (pChoice == 2){
