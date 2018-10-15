@@ -19,10 +19,23 @@ let trainingRounds = 20;
 let history = [];
 let hLength = 1 * 3;
 
+let paperPNG;
+let rockPNG;
+let scissorsPNG;
+let welcomePNG;
+let titlePNG;
+
 // let browserSize = {
 //   browserWidth: window.innerWidth || document.body.clientWidth,
 //   browserHeight: window.innerHeight || document.body.clientHeight
 // }
+function preload() {
+  paperPNG = loadImage('paper.png');
+  rockPNG = loadImage('rock.png');
+  scissorsPNG = loadImage('scissors.png');
+  welcomePNG = loadImage('welcome.png');
+  titlePNG = loadImage('RPS_Title.png');  
+}
 
 function setup() {
   // createCanvas(browserSize.browserWidth, browserSize.browserHeight);
