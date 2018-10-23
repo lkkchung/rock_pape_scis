@@ -15,9 +15,8 @@ let round = 0;
 let confidence = 0;
 
 let brain;
-let trainingRounds = 20;
 let history = [];
-let hLength = 10 * 3;
+let hLength = 10 * 6;
 
 let paperPNG;
 let rockPNG;
@@ -25,10 +24,11 @@ let scissorsPNG;
 let welcomePNG;
 let titlePNG;
 
-// let browserSize = {
-//   browserWidth: window.innerWidth || document.body.clientWidth,
-//   browserHeight: window.innerHeight || document.body.clientHeight
-// }
+let browserSize = {
+  browserWidth: window.innerWidth || document.body.clientWidth,
+  browserHeight: window.innerHeight || document.body.clientHeight
+}
+
 function preload() {
   paperPNG = loadImage('paper.png');
   rockPNG = loadImage('rock.png');
@@ -38,12 +38,12 @@ function preload() {
 }
 
 function setup() {
-  // createCanvas(browserSize.browserWidth, browserSize.browserHeight);
-  createCanvas(800, 800);
-  brain = new NeuralNetwork(hLength, 60, 3);
+  createCanvas(browserSize.browserWidth - 30, browserSize.browserHeight - 30);
+  // createCanvas(800, 800);
+  window.resizeTo(width+10, height+10);
+  brain = new NeuralNetwork(hLength, 80, 3);
   textFont('courier new');
-  setupOsc(3333, 3334);
-
+  // setupOsc(12000, 3334);
 }
 
 function draw() {
@@ -67,9 +67,9 @@ function draw() {
 
   if (screenState == 2) {
     if (reset == true) {
-      screenTimer = max([140 - (round * 4), 40]);
+      screenTimer = max([90 - (round * 4), 40]);
       reset = false;
-      interval = screenTimer / 4;
+      interval = (screenTimer - 40) / 3;
       npChoose();
     }
     countdownScreen(interval);
@@ -80,9 +80,9 @@ function draw() {
 
   if (screenState == 3) {
     if (reset == true) {
-      screenTimer = max([160 - (round * 4), 40]);
+      screenTimer = max([90 - (round * 4), 40]);
       reset = false;
-      interval = screenTimer / 4;
+      interval = (screenTimer - 40) / 3;
 
       npChoice = npChoosing;
       npChoosing = 0;
@@ -204,8 +204,8 @@ function instructScreen() {
   textStyle(NORMAL);
   text("each player simultaneously plays an item," + '\n' + "either rock, paper, or scissors.", 0, 40);
   text("rock(1) beats scissors.", 0, 100);
-  text("scissors(2) beats paper.", 0, 130);
-  text("paper(3) beats rock.", 0, 160);
+  text("paper(2) beats rock.", 0, 130);
+  text("scissors(3) beats paper.", 0, 160);
   pop();
 
   if (screenTimer <= 120) {
@@ -232,10 +232,10 @@ function countdownScreen(_i) {
   textStyle(BOLD)
   textAlign(CENTER);
   fill(255, 0, 60);
-  if (screenTimer > 120) {
+  if (screenTimer > _i * 2 + 40) {
     // textSize(240 - screenTimer);
     text("3", 0, 0);
-  } else if (screenTimer > 80) {
+  } else if (screenTimer > _i * 1 + 40) {
     // textSize(200 - screenTimer);
     text("2", 0, 0);
   } else if (screenTimer > 40) {
@@ -272,13 +272,13 @@ function throwScreen() {
   imageMode(CENTER);
   scale(-1 / 3, 1 / 3);
   rotate(-PI / 2);
-  if(npChoice == 1){
+  if (npChoice == 1) {
     image(rockPNG, 0, 0);
   }
-  if(npChoice == 2){
+  if (npChoice == 2) {
     image(paperPNG, 0, 0);
   }
-  if(npChoice == 3){
+  if (npChoice == 3) {
     image(scissorsPNG, 0, 0);
   }
   pop();
@@ -288,13 +288,13 @@ function throwScreen() {
   imageMode(CENTER);
   scale(1 / 3, 1 / 3);
   rotate(-PI / 2);
-  if(pChoice == 1){
+  if (pChoice == 1) {
     image(rockPNG, 0, 0);
   }
-  if(pChoice == 2){
+  if (pChoice == 2) {
     image(paperPNG, 0, 0);
   }
-  if(pChoice == 3){
+  if (pChoice == 3) {
     image(scissorsPNG, 0, 0);
   }
   pop();
@@ -331,6 +331,46 @@ function throwScreen() {
     screenState = 2;
     reset = true;
 
+    if (npChoice == 1) {
+      history.push(1);
+      history.push(0);
+      history.push(0);
+    }
+    if (npChoice == 2) {
+      history.push(0);
+      history.push(1);
+      history.push(0);
+    }
+    if (npChoice == 3) {
+      history.push(0);
+      history.push(0);
+      history.push(1);
+    }
+    if (pChoice ==0){
+      history.push(0);
+      history.push(0);
+      history.push(0);
+    }
+    if (pChoice == 1) {
+      history.push(1);
+      history.push(0);
+      history.push(0);
+    }
+    if (pChoice == 2) {
+      history.push(0);
+      history.push(1);
+      history.push(0);
+    }
+    if (pChoice == 3) {
+      history.push(0);
+      history.push(0);
+      history.push(1);
+    }
+
+    if (history.length > hLength) {
+      history.splice(0, 6);
+    }
+
     if (round >= 10) {
       training();
     }
@@ -357,50 +397,30 @@ function summaryScreen() {
   textAlign(CENTER);
   textSize(20);
   fill(255);
-  text("The computer won " + Math.round(npScore / (npScore + pScore) * 100) + "%", width / 2, 200);
-  text("You won " + Math.round(pScore / (npScore + pScore) * 100) + "%", width / 2, 230);
+  text("the computer won " + Math.round(npScore / (npScore + pScore) * 100) + "%", width / 2, 200);
+  text("you won " + Math.round(pScore / (npScore + pScore) * 100) + "%", width / 2, 230);
 
-  textSize(50);
+  textSize(100);
   if (npScore > pScore) {
-    text("You lose!", width / 2, height / 2);
+    text("you lose!", width / 2, height / 2);
   }
   if (npScore == pScore) {
-    text("You tied with the computer.", width / 2, height / 2);
+    text("you tied with the computer.", width / 2, height / 2);
   }
   if (npScore < pScore) {
-    text("You win!", width / 2, height / 2);
+    text("you win!", width / 2, height / 2);
   }
 }
 
 function npChoose() {
-  if (round < hLength / 3) {
+  if (round < hLength / 6) {
     npChoosing = random([1, 2, 3]);
   } else {
     let predicted = brain.predict(history);
-    console.log(predicted);
+    // console.log(predicted);
     confidence = Math.max(...predicted);
     npChoosing = (predicted.indexOf(confidence) + 4) % 3 + 1;
-    console.log(npChoosing);
-  }
-
-  if (npChoosing == 1) {
-    history.push(1);
-    history.push(0);
-    history.push(0);
-  }
-  if (npChoosing == 2) {
-    history.push(0);
-    history.push(1);
-    history.push(0);
-  }
-  if (npChoosing == 3) {
-    history.push(0);
-    history.push(0);
-    history.push(1);
-  }
-
-  if (history.length > hLength) {
-    history.splice(0, 3);
+    // console.log(npChoosing);
   }
 }
 
@@ -411,6 +431,12 @@ function pChoose() {
 function keyPressed() {
   if (keyCode == 32 && screenState < 2) {
     screenTimer = 0;
+  }
+
+  if (keyCode == 32 && screenState == 4) {
+    round = 0;
+    screenTimer = 0;
+    screenState = 0;
   }
 
   if (screenState >= 2) {
@@ -446,20 +472,25 @@ function training() {
 }
 
 function setupOsc(oscPortIn, oscPortOut) {
-	var socket = io.connect('http://127.0.0.1:8081', { port: 8081, rememberTransport: false });
-	socket.on('connect', function() {
-		socket.emit('config', {	
-			server: { port: oscPortIn,  host: '127.0.0.1'},
-			client: { port: oscPortOut, host: '127.0.0.1'}
-		});
-	});
-	socket.on('message', function(msg) {
-		if (msg[0] == '#bundle') {
-			for (var i=2; i<msg.length; i++) {
-				receiveOsc(msg[i][0], msg[i].splice(1));
-			}
-		} else {
-			receiveOsc(msg[0], msg.splice(1));
-		}
+  var socket = io.connect('http://127.0.0.1:8081', { port: 8081, rememberTransport: false });
+  socket.on('connect', function () {
+    socket.emit('config', {
+      server: { port: oscPortIn, host: '127.0.0.1' },
+      client: { port: oscPortOut, host: '127.0.0.1' }
+    });
+  });
+
+  socket.on('message', function (msg) {
+    if (msg[0] == '/wek/outputs') {
+      for (var i = 2; i < msg.length; i++) {
+        receiveOsc(msg[i][0], msg[i].splice(1));
+      }
+    } else {
+      receiveOsc(msg[0], msg.splice(1));
+    }
+
+    pChoosing = msg[1];
+
+    console.log(msg);
   });
 }

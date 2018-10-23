@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/p5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/addons/p5.dom.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.11/addons/p5.sound.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
-  </head>
-  <body>
-    <script src="sketch.js"></script>
-    <script src="matrix.js"></script>
-    <script src="nn.js"></script>
-  </body>
+<style>
+    body {
+        background-color: black;
+    }
+</style>
+
+<head>
+    <meta charset=utf-8 />
+    <title>Rock Paper Scissors</title>
+</head>
+
+<body>
+    <!-- <input id="value" /> -->
+    <button onclick="openWindow();">Start</button>
+
+    <script>function openWindow() {
+            newWindow = window.open("window.html", null, "height=810,width=810,toolbar=0,location=0, directories=0, status=0, menubar=0'");
+
+            // newWindow.document.write("window.html");
+            // for(i=0,l=options.length; i<l; i++) {
+            //     newWindow.document.write("<option value='"+options[i].value+"'>");  
+            //     newWindow.document.write(options[i].text);  
+            //     newWindow.document.write("</option>");
+            // }
+            // newWindow.document.write("</select>");
+        }
+
+        function setValue(value) {
+            document.getElementById('value').value = value;
+        }</script>
+</body>
+
 </html>
